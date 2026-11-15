@@ -44,7 +44,7 @@
     wrapper.className = "code-wrap";
     pre.before(wrapper); wrapper.append(pre);
     const label = document.createElement("span");
-    label.className = "code-label"; label.textContent = "SOURCE / READ ONLY";
+    label.className = "code-label"; label.textContent = "CODE EXAMPLE";
     const button = document.createElement("button");
     button.className = "copy-button"; button.textContent = "Copy";
     button.setAttribute("aria-label", "Copy code example");
@@ -60,33 +60,33 @@
   const descriptions = {
     "missing-expression": [
       "Extract only the inline script body. The HTML tags are context, not JavaScript input.",
-      "This is a classic script. Use the Script parse goal and the agreed ES2025 language version.",
+      "This is a classic script. Set sourceType to \"script\" and ecmaVersion to 2025.",
       "After “=”, the grammar requires an expression. The next token is “;”. Both parsers detect this malformed structure.",
       "Return an invalid-syntax result with the original diagnostic. Ask for a repaired source unit, then validate it again."
     ],
     "duplicate-let": [
       "Two declarations arrive in the same inline script. Keep the block intact so scope relationships are preserved.",
-      "The declarations share one lexical scope. A context-free shape check is not enough to check binding uniqueness.",
-      "Tree-sitter can construct a clean tree for both declarations. Acorn additionally detects the duplicate lexical binding.",
+      "Both declarations use the name x in the same scope. JavaScript does not allow two let declarations for the same name there.",
+      "Tree-sitter returns a tree without a structural error. Acorn also checks declarations and rejects the duplicate name.",
       "A clean tree did not mean a valid program. This is a recorded Tree-sitter miss, not a rendering or runtime test."
     ],
     "optional-chain": [
-      "The source uses optional chaining and nullish coalescing. These are ordinary modern JavaScript constructs.",
+      "The ?. operator accesses a property only if its receiver is not null or undefined. The ?? operator supplies a fallback for null or undefined. Both are valid modern JavaScript.",
       "Use the intended language version. An older parser may reject valid syntax before checking anything else.",
       "Acorn and Tree-sitter accept this source. Original Python Esprima 4.0.1 rejects it because its grammar predates these features.",
       "Valid syntax should not be sent back for repair just because a stale parser cannot recognize it. No DOM or runtime assumptions were tested."
     ],
     "script-await": [
       "The illustrative HTML has no type=\"module\" attribute. The extracted source is a classic script.",
-      "Top-level await is valid in a modern Module, but not in an ordinary Script. Do not try both modes and accept whichever passes.",
+      "Top-level await is valid in an ES2025 module, but not in an ordinary script. Select the mode from the HTML type attribute. Trying both and accepting either result would hide a context error.",
       "Acorn rejects this source in Script mode. Tree-sitter does not enforce the same Script/Module early-error distinction.",
       "The fix depends on intent: make the HTML a module or put await in an async function. Changing only the validator's mode would hide the mismatch."
     ],
     "scope-static-block-arrow-arguments": [
-      "The complete class is parsed as source text. This example is deliberately subtle, and came from the independent challenge round.",
-      "A class static block may not contain an arguments reference through an arrow function. An ordinary function introduces its own binding.",
+      "The complete class is read as source text. It contains an arrow function inside a static initialization block.",
+      "JavaScript forbids this arguments reference in a static block. An arrow function has no arguments binding of its own; an ordinary function does.",
       "Acorn 8.19.0 accepts this invalid source. The modern Esprima fork rejects it. This is the one observed Acorn miss in the 607-case corpus.",
-      "Publish the limitation instead of silently patching the benchmark. A strong overall recommendation is not a claim of perfect conformance."
+      "This is a known limitation of Acorn 8.19.0. Keep the example in your regression tests when changing parser versions."
     ]
   };
   let traces = null, stage = 0, timer = null;

@@ -1,72 +1,80 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="A developer's field guide to validating LLM-generated JavaScript in Python. 607 tested samples, interactive recorded traces and reproducible evidence.">
-<meta name="color-scheme" content="dark light">
-<title>Checking JavaScript without Node — an engineering field guide</title>
-<link rel="stylesheet" href="assets/blog.css">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<script src="assets/blog.js" defer></script></head><body>
-<a href="#main" class="skip">Skip to article</a>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Validate JavaScript syntax in AI-generated HTML from Python without Node.js. Compare seven tools on 607 test samples, with working code, recorded errors and downloadable evidence." name="description"/>
+<meta content="dark light" name="color-scheme"/>
+<title>How to validate JavaScript in Python: 7 tools tested</title>
+<link href="assets/blog.css" rel="stylesheet"/>
+<link href="assets/favicon.svg" rel="icon" type="image/svg+xml"/>
+<script defer="" src="assets/blog.js"></script></head><body>
+<a class="skip" href="#main">Skip to article</a>
 <header class="topbar"><a class="wordmark" href="./"><span>~/</span> engineering notes</a>
-<div class="toplinks"><a href="#evidence">Evidence & downloads</a><a class="github-link" href="https://github.com/sandeshbagmare/python-javascript-validation">Source ↗</a>
-<button id="theme" class="theme-toggle" aria-label="Switch to light theme">Light mode</button></div></header>
-<div class="reading-progress" aria-hidden="true"></div>
-<div class="hero"><div><div class="eyebrow">FIELD GUIDE 001 &nbsp; / &nbsp; LANGUAGE TOOLING</div>
-<h1>Checking JavaScript.<br><em>Without Node.</em></h1>
-<p class="dek">What should stand between an LLM-generated script and your users?
-We tested seven Python-deployable approaches—and found that a clean syntax tree isn’t the whole story.</p>
-<div class="byline">15 NOVEMBER 2026 &nbsp; · &nbsp; 607 SAMPLES &nbsp; · &nbsp; REPRODUCIBLE LINUX STUDY<br>
-For engineers shipping generated HTML, not just parsing it.</div></div>
-<aside class="hero-note"><strong>The short answer</strong><p>Acorn hosted by Python offers the best overall balance
-here. Tree-sitter is a useful screen, but it misses more than edge cases.</p><a href="#conclusion">Read the decision ↓</a></aside></div>
-<div class="facts"><div class="fact"><strong>607</strong>distinct source / goal pairs</div>
-<div class="fact"><strong>7</strong>pinned configurations</div><div class="fact"><strong>302 / 305</strong>valid / invalid samples</div>
+<div class="toplinks"><a href="#evidence">Evidence &amp; downloads</a><a class="github-link" href="https://github.com/sandeshbagmare/python-javascript-validation">Source ↗</a>
+<button aria-label="Switch to light theme" class="theme-toggle" id="theme">Light mode</button></div></header>
+<div aria-hidden="true" class="reading-progress"></div>
+<div class="hero"><div><div class="eyebrow">PYTHON DEVELOPMENT / JAVASCRIPT VALIDATION</div>
+<h1>How to validate<br/><em>JavaScript in Python</em></h1>
+<p class="dek">Check JavaScript in AI-generated HTML before returning it to users. A comparison of seven Python-compatible options using 607 test samples, with working code and the limits of each approach.</p>
+<div class="byline">15 NOVEMBER 2026 · 607 TEST SAMPLES · LINUX / PYTHON 3.13<br/>For Python developers validating generated HTML without installing Node.js.</div></div>
+<aside class="hero-note"><strong>Recommended: Acorn with mini-racer</strong><p>This combination runs through Python and accepts modern JavaScript. It caught 304 of 305 invalid samples without rejecting any of the 302 valid samples.</p><a href="#conclusion">Read the recommendation ↓</a></aside></div>
+<div class="facts"><div class="fact"><strong>607</strong>JavaScript test samples</div>
+<div class="fact"><strong>7</strong>tested parser setups</div><div class="fact"><strong>302 / 305</strong>valid / invalid samples</div>
 <div class="fact"><strong>0</strong>submitted programs executed</div></div>
-<div class="layout"><aside class="toc" aria-label="Table of contents"><div class="label">IN THIS FIELD GUIDE</div><nav><a href="#conclusion">01 &nbsp; The recommendation</a><a href="#decision-matrix">02 &nbsp; Choose your level</a><a href="#walkthrough">03 &nbsp; See the parser work</a><a href="#results">04 &nbsp; What the tests found</a><a href="#explorer">05 &nbsp; Explore 607 cases</a><a href="#method">06 &nbsp; How we tested</a><a href="#operations">07 &nbsp; Operational tradeoffs</a><a href="#maintenance">08 &nbsp; Maintenance & adoption</a><a href="#snippet">09 &nbsp; Ship it in Python</a><a href="#evidence">10 &nbsp; Download the evidence</a></nav>
-<a class="pdf-link" href="downloads/javascript-validation-report.pdf" download>↓ Download PDF report</a></aside>
-<main id="main"><section id="conclusion"><div class="section-number">01 / THE RECOMMENDATION</div>
-<h2>Best overall balance: Acorn, hosted by Python.</h2>
-<p><strong>For this application, choose pinned Acorn 8.19.0 inside <code>mini-racer==0.14.1</code>.</strong>
-The container needs Python and its native wheel, not Node.js. Execute the trusted parser and pass generated
-JavaScript as data; never evaluate the submitted program.</p>
-<p>The priority is to avoid flagging valid code as broken, while tolerating occasional missed edge cases.
-On the expanded corpus Acorn-V8 wrongly rejected <strong>0/302</strong>
-valid samples and missed <strong>1/305</strong> invalid samples.
-Its parser has substantial adoption, and the V8 route handled our depth-300 valid probe.
-This is a practical tradeoff, not a mathematical proof or an unconditional winner for every workload.</p>
-<p>This default assumes a persistent worker and an acceptable native-engine footprint:
-the V8 worker peaked at approximately 103 MiB RSS in this run.
-If that memory budget is too high, the QuickJS host's approximately
-33 MiB observed peak makes it the better deployment tradeoff,
-with its tested default-stack limitation handled as inconclusive.</p>
-<div class="callout"><strong>Why not simply choose Tree-sitter?</strong> Low false alarms alone do not favor it:
-Tree-sitter rejected 3/302 valid samples, but missed
-259/305 invalid samples.
-It remains an excellent fast structural/advisory screen. Once useful error detection is included,
-Acorn catches substantially more without a measured false-alarm penalty in this corpus.</div>
-<div class="callout caution"><strong>Why not the pure-Python fork?</strong>
-<code>esprima-fork==5.0.0</code> recorded 0 false rejects and
-0 missed invalid cases. Credit that result.
-However, its snapshot shows 0 repository stars, 129 monthly distribution downloads and a roughly four-year
-gap preceding the latest release. It also reaches resource limits on deeply nested valid inputs.
-It is the strongest tested pure-Python alternative, but its independent scrutiny and maintenance continuity
-are less established. The recommendation deliberately trades a disclosed Acorn edge-case miss for stronger ecosystem evidence.</div>
-<h3>Choose the host deliberately</h3>
-<p>Acorn in QuickJS-NG has the same parser logic, a smaller deployment footprint and a more recently released wrapper.
-It is a credible alternative when size matters. The V8 route is the default here for broader listed platform support,
-greater wrapper adoption and better depth tolerance in our tests—not because two hosts are two independent validators.
-mini-racer's latest release was February 2026; its age is a real maintenance consideration, not hidden by V8's reputation.</p>
-<p><strong>Acceptance policy:</strong> a parser-reported syntax error is a candidate for repair only under the correct
-Script/Module and language-version contract. Timeouts, unsupported configurations, resource exhaustion and crashes are
-<em>inconclusive</em>, not broken JavaScript. If avoiding false rejection dominates everything, make uncertain outcomes advisory.
-Syntax acceptance still does not guarantee correct rendering.</p>
-</section><section id="decision-matrix"><div class="section-number">02 / CHOOSE YOUR LEVEL</div>
-<h2>Choose the promise before you choose the parser.</h2>
-<p>“Valid” can mean structurally plausible, syntactically legal, compatible with a particular browser,
-or actually working. Those are different contracts. Here is how to choose without buying complexity
-you do not need—or trusting a check that does not make the promise you think it makes.</p>
+<div class="layout"><aside aria-label="Table of contents" class="toc"><div class="label">CONTENTS</div><nav><a href="#conclusion">01  Recommendation</a><a href="#decision-matrix">02  Choose a checking level</a><a href="#walkthrough">03  Walk through examples</a><a href="#results">04  Measured results</a><a href="#explorer">05  Search test samples</a><a href="#method">06  Test method and limits</a><a href="#operations">07  Memory and performance</a><a href="#maintenance">08  Maintenance and adoption</a><a href="#snippet">09  Python implementation</a><a href="#evidence">10  Report and test downloads</a></nav>
+<a class="pdf-link" download="" href="downloads/javascript-validation-report.pdf">↓ Download PDF report</a></aside>
+<main id="main"><section id="conclusion"><div class="section-number">01 / RECOMMENDATION</div>
+<h2>Recommended for this workload: Acorn with mini-racer</h2>
+<p><strong>Use <code>Acorn 8.19.0</code> through <code>mini-racer==0.14.1</code> when you need a strict syntax check in a Python application.</strong> mini-racer is a Python package that includes the V8 JavaScript engine. V8 runs the trusted Acorn parser; Acorn reads the generated source as text. The generated program is never executed, and Node.js is not required.</p>
+<div class="callout">
+<strong>Scope of this comparison</strong>
+<p>The input is JavaScript extracted from HTML generated by a large language model (LLM).
+The application runs in a Python container without Node.js. Python packages containing compiled
+native code are allowed. The goal is to catch invalid source without unnecessarily rejecting valid modern JavaScript.</p>
+<p>A parser reads source and checks language rules. A JavaScript engine runs JavaScript.
+Here the engine runs only the trusted parser. It never runs the program being validated.</p>
+</div>
+<h3>Terms used in the results</h3>
+<dl class="definitions">
+<dt>Script and Module</dt><dd>Two JavaScript parsing contexts. An ordinary inline <code>&lt;script&gt;</code>
+uses Script; <code>&lt;script type="module"&gt;</code> uses Module. Imports and top-level <code>await</code>
+depend on this choice. A “parse goal” means this selected context.</dd>
+<dt>ECMAScript / ES2025</dt><dd>ECMAScript is the JavaScript language specification.
+ES2025 identifies the edition used to label these test samples.</dd>
+<dt>Early error</dt><dd>A language-rule violation detectable before running code, such as
+declaring <code>let x</code> twice in the same scope. A parser may recognize the code’s structure without checking this rule.</dd>
+<dt>Scope and binding</dt><dd>A scope is the region where a declared name is available.
+A binding connects that name to its declared value or variable.</dd>
+<dt>Strict mode</dt><dd>A JavaScript mode that applies additional restrictions.
+Modules use it automatically; classic scripts can enable it with <code>"use strict"</code>.
+A “sloppy” script means a classic script outside strict mode. This is separate from a
+“strict parser,” which reports errors rather than accepting malformed input through error recovery.</dd>
+<dt>Native wheel</dt><dd>A prebuilt Python package containing compiled code for a particular platform.
+mini-racer includes the V8 engine this way; it does not install Node.</dd>
+<dt>Worker and engine context</dt><dd>A worker is the process that performs validation.
+An engine context is its JavaScript environment, which can keep the trusted parser loaded between requests.</dd>
+<dt>RSS / MiB</dt><dd>Resident set size (RSS) measures process memory held in RAM.
+MiB means 1,048,576 bytes. The report uses peak observed worker RSS.</dd>
+<dt>Corpus</dt><dd>The complete set of source samples used for testing.
+Each sample has a source string, parsing context and expected result.</dd>
+<dt>JSX, AST and regular expressions</dt><dd>JSX is a syntax extension often used with React; browsers
+do not accept it as ordinary JavaScript without transformation. An abstract syntax tree (AST)
+represents parsed code. A regular expression, or regex, is a text-matching pattern such as <code>/a+/</code>.</dd>
+<dt>DOM and CSP</dt><dd>The Document Object Model (DOM) is the browser’s representation of the page.
+Content Security Policy (CSP) controls which resources and scripts the browser permits.</dd>
+</dl>
+
+<p>The test set contains 302 valid and 305 invalid JavaScript samples. Acorn with V8 rejected none of the valid samples and missed one invalid sample. It also accepted the separate valid nesting test at depth 300. These measurements support the recommendation for this use case. They do not establish a production error rate or correctness for every possible program.</p>
+<p>Reuse a long-running worker process so you do not initialize the engine for every request. The V8 worker used approximately 103 MiB of memory at its measured peak. If that is too much, consider Acorn with QuickJS-NG, which peaked at approximately 33 MiB. Report its tested nesting limit as an inconclusive check rather than invalid source.</p>
+<div class="callout"><strong>Tree-sitter detects fewer invalid programs.</strong> It rejected 3/302 valid samples and missed 259/305 invalid samples. Its speed and error recovery are useful for structural warnings. For final syntax checking, Acorn caught more errors without rejecting additional valid samples in this test set.</div>
+<div class="callout caution"><strong>The modern Esprima fork had the best classification result.</strong> <code>esprima-fork==5.0.0</code> recorded no false rejections or missed invalid cases. Its maintenance evidence is less established: 0 repository stars, 129 monthly distribution downloads, and a roughly four-year gap before the latest release. Deeply nested valid input also reached its resource limit. Choosing Acorn accepts one documented missed error in exchange for stronger adoption evidence and tested nesting tolerance.</div>
+<h3>Choose mini-racer or QuickJS-NG based on memory and input size</h3>
+<p>Both hosts run the same Acorn parser, so their matching syntax results are not independent confirmation. QuickJS-NG uses less memory in this test and its Python package was released more recently. The V8 route has broader listed platform support and more downloads for its Python package. It also handled deeper input under the tested defaults. mini-racer was last released in February 2026; assess that maintenance gap separately from V8 itself.</p>
+<p><strong>Handle uncertain results separately.</strong> Request source repair for a syntax error only after selecting the correct Script/Module context and language version. A timeout, unsupported configuration, resource limit or crash is <code>inconclusive</code>. Use a warning or review path for uncertain results when false rejection is especially costly. Accepted syntax does not guarantee successful rendering.</p>
+</section><section id="decision-matrix"><div class="section-number">02 / CHOOSE A CHECKING LEVEL</div>
+<h2>Choose a check based on what your application needs</h2>
+<p>Choose the level of checking your application needs. A basic parser can spot incomplete source. A stricter validator also checks rules such as duplicate declarations. Browser tests can check specific UI behavior after the source is loaded. Each option below states the result you can rely on and the failures it can miss.</p>
 <div class="decision-grid">
-<article class="decision"><div class="kicker">01 / LIGHT CHECK</div><h3>Catch obvious malformed structure.</h3>
+<article class="decision"><div class="kicker">01 / LIGHT CHECK</div><h3>Light check: Tree-sitter for incomplete or malformed code</h3>
 <p><strong>Recommended:</strong> <a href="https://pypi.org/project/tree-sitter/0.26.1/">Tree-sitter 0.26.1</a>
 with <a href="https://pypi.org/project/tree-sitter-javascript/0.25.0/">JavaScript grammar 0.25.0</a>.</p>
 <p>Inspect <code>root_node.has_error</code>, then walk both <code>ERROR</code> and <code>MISSING</code>
@@ -77,21 +85,21 @@ invalid code is acceptable. Keep it advisory if false rejection is the highest c
 <p><strong>Accept the cost:</strong> <code>let x; let x;</code>, <code>break;</code>, <code>const x;</code>
 and JSX can produce clean trees. The benchmark recorded 259 missed invalid cases and three false alarms.
 That is not a production rate, but it establishes that this is not a complete JavaScript validator.</p></article>
-<article class="decision"><div class="kicker">02 / GOOD DEFAULT</div><h3>Check grammar and early errors.</h3>
+<article class="decision"><div class="kicker">02 / GOOD DEFAULT</div><h3>Stricter check: Acorn for syntax and context rules</h3>
 <p><strong>Recommended:</strong> <a href="https://github.com/acornjs/acorn/tree/8.19.0/acorn">Acorn 8.19.0</a>
 through <a href="https://pypi.org/project/mini-racer/0.14.1/">mini-racer 0.14.1</a>.
 The Python wheel supplies the engine; your container does not need Node.</p>
 <p>Use the actual Script/Module goal, an explicit edition, and ordinary strict-parser options.
 Pass generated source as an argument to the trusted parser. Reuse one context per worker,
 and keep source size, wall-clock time and memory bounded.</p>
-<p><strong>Use it for:</strong> a delivery gate for generated source where low false alarms and useful
+<p><strong>Use it for:</strong> a check before delivery for generated source where low false alarms and useful
 invalid detection both matter. It accepted all 302 valid samples and missed one of 305 invalid samples.</p>
 <p><strong>Accept the cost:</strong> a native engine, roughly 103 MiB measured worker peak RSS,
 startup overhead, separate parser/host updates, and a documented static-block early-error miss.
 An accepted result means syntax accepted, not “the UI works.”</p></article>
-<article class="decision"><div class="kicker">03 / PURE PYTHON</div><h3>A stricter check without an engine wheel.</h3>
+<article class="decision"><div class="kicker">03 / PURE PYTHON</div><h3>Pure-Python option: the modern Esprima fork</h3>
 <p><strong>Recommended candidate:</strong> <a href="https://pypi.org/project/esprima-fork/5.0.0/">esprima-fork 5.0.0</a>,
-qualified against your own source distribution. Set <code>ecmaVersion=2025</code>,
+after testing it against representative source from your application. Set <code>ecmaVersion=2025</code>,
 <code>tolerant=False</code>, and <code>jsx=False</code>.</p>
 <p><strong>Use it when:</strong> Python portability or native-wheel restrictions outweigh the maintenance
 uncertainty. It agreed with all 607 labels in this study, including the Acorn counterexample.</p>
@@ -99,55 +107,42 @@ uncertainty. It agreed with all 607 labels in this study, including the Acorn co
 Valid nesting hit the resource limit at depths 100 and 300. Return <code>INCONCLUSIVE</code>,
 not invalid syntax, for these diagnostics. Install it alone: all three Esprima distributions
 use the <code>esprima</code> import namespace.</p></article>
-<article class="decision"><div class="kicker">04 / STRONGEST ASSURANCE</div><h3>Test the actual environment as well.</h3>
-<p><strong>No parser offers a rendering guarantee.</strong> Start with the strict syntax gate, then
+<article class="decision"><div class="kicker">04 / STRONGEST ASSURANCE</div><h3>Browser tests: check whether the page works</h3>
+<p><strong>No parser offers a rendering guarantee.</strong> Start with the strict syntax check, then
 use an isolated browser test stage with the same origin, CSP, assets, dependencies and supported browsers
-as production. Exercise the expected interactions and collect console, network and DOM failures.</p>
+as production. Test the expected interactions and collect console, network and DOM failures.</p>
 <p>This stage needs infrastructure beyond the Python-only parser container: an independently provisioned
 browser worker or CI service. It was not implemented or benchmarked in this study.</p>
 <p>For higher syntax assurance, a second parser may be useful as a disagreement detector.
 Do not blindly require both parsers to pass: that can increase false rejection when either parser has
 a limitation. Send disagreements and infrastructure failures to review.</p>
-<p><strong>The strongest honest promise:</strong> “passed these source checks and these browser scenarios
+<p><strong>Describe the test result:</strong> “passed these source checks and these browser scenarios
 under these pinned conditions.” Arbitrary JavaScript behavior cannot be universally guaranteed by a finite
 test suite. Security review and isolation are separate requirements.</p></article>
 </div>
-<h3>A concrete decision sequence</h3>
-<ol>
-<li><strong>Are native Python wheels allowed?</strong> If yes, Acorn’s embedded hosts are eligible.
-If no, qualify the modern fork. Do not confuse “no Node” with “no JavaScript engine of any kind.”</li>
-<li><strong>Is this a warning or a release gate?</strong> Tree-sitter is reasonable for warnings.
-A gate deserves a strict, context-aware parser with explicit failure categories.</li>
-<li><strong>Is ~103 MiB worker memory acceptable?</strong> If not, consider
-<a href="https://pypi.org/project/quickjs-ng/0.18.0.1/">Acorn + quickjs-ng</a>, whose worker peaked around
-33 MiB. Its default stack reached a limit at depth 300; stack tuning was not part of the experiment.</li>
-<li><strong>Must it work, not just parse?</strong> Add a separate browser-scenario stage.
-Missing functions, broken DOM selectors and failed imports remain outside the syntax verdict.</li>
-<li><strong>Can a failure be ambiguous?</strong> Yes. A timeout is not invalid syntax, and an
-unsupported dialect is not necessarily broken source. Preserve those distinctions in your API.</li>
-</ol>
-<h3>Why each candidate received its position</h3>
-<p>The ranking is an ordered engineering judgment: low false rejection first, useful invalid detection next,
-then deployment, operational limits and maintenance. It is not a score produced by adding stars to accuracy.</p>
+<h3>Decisions to make before installation</h3>
+<ol><li>Check whether compiled Python packages are allowed. If they are, Acorn’s engine hosts are eligible. Otherwise, test the modern fork against your application inputs. Acorn avoids Node.js but still needs a JavaScript engine.</li><li>Decide whether the result is a warning or a requirement before delivery. Tree-sitter is reasonable for warnings. A delivery requirement needs a context-aware parser that reports syntax errors and separates failed checks.</li><li>Check the worker memory budget. If approximately 103 MiB is too high, consider <a href="https://pypi.org/project/quickjs-ng/0.18.0.1/">Acorn + quickjs-ng</a>, whose worker peaked around 33 MiB. Its default stack reached a limit at depth 300; stack tuning was not tested.</li><li>Add a separate browser-test stage when you need evidence that the application works. Missing functions, broken DOM selectors and failed imports remain outside the syntax result.</li><li>Keep uncertain failures separate. Timeouts and unsupported syntax extensions do not necessarily mean broken source. Preserve these distinctions in your API.</li></ol>
+<h3>Reasons for recommending or rejecting each option</h3>
+<p>The recommendation considers incorrect rejection of valid code, detection of invalid code, deployment requirements, measured limits and maintenance. The fork had the best classification result in this test set. Acorn is the overall recommendation because of its adoption and tested nesting tolerance, despite its documented missed error. Stars are not added to an accuracy score.</p>
 <div class="scroll"><table><thead><tr><th>Candidate</th><th>Concrete shortcoming</th><th>Decision</th></tr></thead><tbody>
 <tr><td><a href="https://github.com/acornjs/acorn/tree/8.19.0/acorn">Acorn</a> + <a href="https://github.com/bpcreech/PyMiniRacer">mini-racer</a></td><td>Accepts <code>class C { static { const f = () =&gt; arguments; } }</code>; native footprint and older wrapper release.</td><td>Best overall default for a persistent worker, not perfect conformance.</td></tr>
 <tr><td>Acorn + <a href="https://github.com/genotrance/quickjs-ng">quickjs-ng</a></td><td>Same Acorn miss; depth-300 default-stack limit. Smaller and faster startup.</td><td>Preferred when memory/startup budget outweighs tested depth tolerance.</td></tr>
-<tr><td><a href="https://github.com/0o120/esprima-python">esprima-fork</a></td><td>No corpus classification errors, but nesting limits and very small adoption.</td><td>Best measured pure-Python alternative; qualify maintenance and regressions.</td></tr>
-<tr><td><a href="https://github.com/tree-sitter/tree-sitter-javascript/blob/v0.25.0/grammar.js">Tree-sitter JavaScript</a></td><td>Clean trees accept duplicate bindings, illegal control flow, JSX and regex errors. Valid sloppy <code>(yield) =&gt; 1</code> was rejected.</td><td>Structural diagnostics, not the authoritative validity gate.</td></tr>
-<tr><td><a href="https://github.com/tylersatre/oxc-python/blob/v0.1.1/src/parser.rs">oxc-python</a></td><td>The binding exposes parser errors without Oxc’s semantic syntax-checking pass. 153 invalid cases passed.</td><td>Do not borrow full Oxc capabilities or core popularity for this wrapper.</td></tr>
-<tr><td><a href="https://pypi.org/project/esprima2/6.0.0/">esprima2</a></td><td>10 valid cases rejected; 102 invalid cases passed, including binding/context gaps.</td><td>Portable, but weaker validation in this comparison than the stronger candidates.</td></tr>
-<tr><td><a href="https://pypi.org/project/esprima/4.0.1/">Original esprima</a></td><td>ES2017-era grammar rejects modern optional chaining and other current constructs; 112 false rejects.</td><td>Poor fit for modern LLM output. Original-package popularity does not fix grammar age.</td></tr>
+<tr><td><a href="https://github.com/0o120/esprima-python">esprima-fork</a></td><td>No corpus classification errors, but nesting limits and very small adoption.</td><td>Best measured pure-Python alternative; assess maintenance and test your application inputs.</td></tr>
+<tr><td><a href="https://github.com/tree-sitter/tree-sitter-javascript/blob/v0.25.0/grammar.js">Tree-sitter JavaScript</a></td><td>Clean trees accept duplicate bindings, illegal control flow, JSX and regex errors. Valid non-strict <code>(yield) =&gt; 1</code> was rejected.</td><td>Structural diagnostics, not the authoritative validity gate.</td></tr>
+<tr><td><a href="https://github.com/tylersatre/oxc-python/blob/v0.1.1/src/parser.rs">oxc-python</a></td><td>The binding exposes parser errors without Oxc’s semantic syntax-checking pass. 153 invalid cases passed.</td><td>Assess the checks this Python wrapper actually exposes.</td></tr>
+<tr><td><a href="https://pypi.org/project/esprima2/6.0.0/">esprima2</a></td><td>10 valid cases rejected; 102 invalid cases passed, including missed declaration and parsing-context errors.</td><td>Portable, but weaker validation in this comparison than the stronger candidates.</td></tr>
+<tr><td><a href="https://pypi.org/project/esprima/4.0.1/">Original esprima</a></td><td>ES2017-era grammar rejects modern optional chaining and other current constructs; 112 false rejects.</td><td>Poor fit for modern LLM output. Popularity does not establish support for newer syntax.</td></tr>
 </tbody></table></div>
 <h3>Researched but not in the seven-run benchmark</h3>
 <ul>
 <li><a href="https://pypi.org/project/pyswc/0.2.0/">pyswc / SWC bindings</a>:
-wrapper age, platform coverage and limited parse-goal controls prevented a like-for-like deployment recommendation.
+wrapper age, platform coverage and limited controls for Script or Module mode prevented a like-for-like deployment recommendation.
 This does not rank SWC core as a poor parser.</li>
 <li><a href="https://babeljs.io/docs/babel-parser">Babel parser</a>:
-valuable for JSX/TypeScript/proposals, but extra bundling/options and regex-pattern-validation qualification
+valuable for JSX/TypeScript/proposals, but extra bundling/options and verification of regular-expression pattern checks
 make it a different integration. Not measured here.</li>
 <li><a href="https://github.com/meriyah/meriyah">Meriyah</a>:
-host-dependent regex validation and explicit lexical-check configuration require separate qualification.
+regular-expression validation that depends on the engine running the parser and explicit configuration of checks on declarations and scope require separate qualification.
 Not measured here.</li>
 <li><a href="https://bellard.org/quickjs/quickjs.html">QuickJS compile-only APIs</a>:
 the C capability is not automatically exposed by every Python wrapper. Do not call a wrapper’s
@@ -157,7 +152,7 @@ incorrectly accepts a top-level <code>return</code> for a classic script, and do
 <li>Regex/bracket counting: cannot resolve comments, literals, template substitutions, lexical rules,
 automatic semicolon insertion or scope. A quick heuristic is not a language parser.</li>
 </ul>
-<h3>Return an API result your caller can act on</h3>
+<h3>Return a result that separates bad source from failed validation</h3>
 <pre><code>{
   "status": "invalid",
   "stage": "javascript-syntax",
@@ -170,27 +165,20 @@ automatic semicolon insertion or scope. A quick heuristic is not a language pars
     "utf16Column": 8
   }
 }</code></pre>
-<p class="caption">Illustrative response schema, not a verbatim benchmark record. Preserve the parser’s actual diagnostic.
-Record script identity and location units so the UI can highlight the correct source. Do not claim the
-column is an HTML-document offset unless your extraction layer supplies a tested source mapping.</p>
-<p>Suggested caller policy: <code>valid</code> proceeds; <code>invalid</code> requests a focused repair;
-<code>inconclusive</code> retries under a controlled policy or goes to review. Never endlessly regenerate
-code because the validator ran out of memory. Store original source and diagnostics to build a production
-regression set rather than relying only on this article’s corpus.</p>
-</section><section id="walkthrough"><div class="section-number">03 / SEE THE PARSER WORK</div>
-<h2>A parser error, under the microscope.</h2>
-<p>“Does it parse?” sounds like a yes/no question. In practice, the answer depends on what was extracted,
-the grammar you selected, and whether the parser checks contextual rules. Step through these examples to see the difference.</p>
-<p class="caption">Recorded examples, not a live validator. Parser verdicts come from the published benchmark.
-The HTML envelope and stage descriptions are explanatory. Nothing you see here is executed as JavaScript.</p>
+<p class="caption">This response schema is an example, not a verbatim benchmark record. Preserve the parser’s actual error message. Record which script failed and whether locations count lines, UTF-16 code units or another unit. Locating an error in the original HTML also requires a tested mapping from extracted source to document positions.</p>
+<p>Suggested caller policy: <code>valid</code> proceeds; <code>invalid</code> requests a repair based on the error message; <code>inconclusive</code> retries under a controlled policy or goes to review. A validator memory failure should not trigger an endless code-regeneration loop. Store the original source and diagnostics to build a production regression set alongside this article’s test set.</p>
+</section><section id="walkthrough"><div class="section-number">03 / WALK THROUGH EXAMPLES</div>
+<h2>Follow a script from HTML extraction to an error message</h2>
+<p>The result depends on the exact text extracted from HTML and the rules the parser applies. These examples show a missing expression, a duplicate declaration, modern syntax, a Script/Module mismatch and the invalid class definition that Acorn missed.</p>
+<p class="caption">These walkthroughs display recorded benchmark results. They do not validate new input. The surrounding HTML and step descriptions explain how an application would use the parser. None of the example source is executed.</p>
 <div aria-label="Recorded validation walkthrough" class="lab">
-<div class="lab-header"><strong>Inside the validation pipeline</strong><span>RECORDED TRACE / 01</span></div>
+<div class="lab-header"><strong>JavaScript validation steps</strong><span>RECORDED TEST RESULTS</span></div>
 <div class="lab-choices"><label for="example">Choose a failure mode</label><select id="example">
-<option value="missing-expression">01 — Missing expression · const x = ;</option>
-<option value="duplicate-let">02 — Clean tree, invalid program · duplicate let</option>
-<option value="optional-chain">03 — Modern syntax · optional chaining</option>
-<option value="script-await">04 — Correct syntax, wrong context · top-level await</option>
-<option value="scope-static-block-arrow-arguments">05 — The edge case Acorn missed</option>
+<option value="missing-expression">01 : Missing expression · const x = ;</option>
+<option value="duplicate-let">02 : Clean tree, invalid program · duplicate let</option>
+<option value="optional-chain">03 : Modern syntax · optional chaining</option>
+<option value="script-await">04 : Correct syntax, wrong context · top-level await</option>
+<option value="scope-static-block-arrow-arguments">05 : The edge case Acorn missed</option>
 </select></div>
 <div aria-label="Pipeline stages" class="pipeline">
 <button aria-current="step" data-stage="0">01 / Extract</button>
@@ -206,42 +194,26 @@ The HTML envelope and stage descriptions are explanatory. Nothing you see here i
 <span class="counter" id="step-count">STEP 1 OF 4</span></div>
 </div>
 <p class="caption" id="motion-note">Animations start only when you press Play. Every stage is also available as a button.</p>
-<div class="print-only"><h3>Three traces worth remembering</h3>
+<div class="print-only"><h3>Three examples of syntax and context checks</h3>
 <p><code>const x=;</code> → grammar failure: a variable initializer needs an expression.</p>
 <p><code>let x; let x;</code> → Tree-sitter constructs a clean tree, but Acorn rejects a duplicate lexical binding.</p>
 <p><code>await 1;</code> → invalid as a classic script; valid at the top level of an ES2025 module.
 The HTML <code>type</code> attribute determines which parse goal you must use.</p></div>
-<h3>Highlighting is not the same as validation</h3>
-<p>A recovery parser can return a useful tree even when the source is incomplete. A strict parser adds rules such as
-“this binding already exists” or “this statement is not allowed here.” These are different capabilities.
-Do not interpret the existence of an AST as proof that the browser accepts the program.</p>
-</section><section id="results"><div class="section-number">04 / WHAT THE TESTS FOUND</div>
-<h2>302 valid samples. 305 invalid samples.</h2>
-<p>“False positive” in the user's terminology means valid code wrongly flagged as broken; here it is called a
-<strong>false rejection</strong>. A false acceptance means invalid code slipped through.</p>
+<h3>A syntax tree can still describe invalid JavaScript</h3>
+<p>A parser such as Tree-sitter can recover from malformed input and still return a useful syntax tree. Even an error-free tree may omit rules such as “this name is already declared in this scope.” An abstract syntax tree (AST) is a structured representation of code. Producing an AST does not by itself establish that the program is valid.</p>
+</section><section id="results"><div class="section-number">04 / MEASURED RESULTS</div>
+<h2>Results from 302 valid and 305 invalid samples</h2>
+<p>A <strong>false rejection</strong>, or false alarm, means valid JavaScript was marked invalid. A <strong>false acceptance</strong>, or missed error, means invalid JavaScript passed the check. The tables keep these counts separate because preventing false alarms is the primary requirement.</p>
 <div class="scroll"><table><thead><tr><th>Pinned candidate</th><th>Valid wrongly rejected / 302</th><th>Invalid missed / 305</th><th>Inconclusive</th><th>Worker parse median μs</th></tr></thead><tbody><tr><td>Acorn 8.19.0 + mini-racer 0.14.1</td><td>0</td><td>1</td><td>0</td><td>479.1</td></tr><tr><td>Acorn 8.19.0 + quickjs-ng 0.18.0.1</td><td>0</td><td>1</td><td>0</td><td>347.0</td></tr><tr><td>esprima-fork 5.0.0</td><td>0</td><td>0</td><td>0</td><td>287.7</td></tr><tr><td>esprima2 6.0.0</td><td>10</td><td>102</td><td>0</td><td>200.3</td></tr><tr><td>Tree-sitter 0.26.1 / JS grammar 0.25.0</td><td>3</td><td>259</td><td>0</td><td>46.8</td></tr><tr><td>oxc-python 0.1.1</td><td>0</td><td>153</td><td>0</td><td>7.6</td></tr><tr><td>Original esprima 4.0.1</td><td>112</td><td>43</td><td>0</td><td>212.6</td></tr></tbody></table></div>
-<p>The original 107 diagnostic cases remain in the study. The additional 500 cases come from distinct pinned
-Test262 source files, with expected outcomes derived from their official metadata. These are syntax checks, never execution tests.
-The standards-only results are shown separately so the added evidence is not confused with the hand-curated baseline.</p>
+<p>The test set combines 107 manually designed examples with 500 distinct files from Test262, the official ECMAScript test suite. Expected syntax results for the 500 files come from their test metadata. The programs were parsed without execution. The next table shows this 500-file subset separately.</p>
 <div class="scroll"><table><thead><tr><th>Standards-only subset</th><th>False rejects</th><th>False accepts</th><th>Inconclusive</th></tr></thead><tbody><tr><td>acorn-v8</td><td>0</td><td>0</td><td>0</td></tr><tr><td>acorn-quickjs</td><td>0</td><td>0</td><td>0</td></tr><tr><td>esprima-fork</td><td>0</td><td>0</td><td>0</td></tr><tr><td>esprima2</td><td>10</td><td>88</td><td>0</td></tr><tr><td>tree-sitter</td><td>3</td><td>210</td><td>0</td></tr><tr><td>oxc-python</td><td>0</td><td>116</td><td>0</td></tr><tr><td>esprima</td><td>94</td><td>31</td><td>0</td></tr></tbody></table></div>
-<h3>One important Acorn miss</h3>
+<h3>The invalid class definition that Acorn accepted</h3>
 <pre><code>class C { static { const f = () =&gt; arguments; } }</code></pre>
-<p>This is invalid: class static-block <code>ContainsArguments</code> checks descend through arrows.
-The corresponding ordinary function may use its own <code>arguments</code>.
-Both Acorn hosts accept this pinned-version counterexample; the fork rejects it.
-An independent reviewer confirmed the expected label against
-<a href="https://tc39.es/ecma262/2025/multipage/ecmascript-language-functions-and-classes.html#sec-static-semantics-containsarguments">ES2025 ContainsArguments</a>.
-No untested patch is quietly applied to inflate Acorn's score.</p>
-<p>All source units, expected labels and observed outcomes—not just the examples—are linked below.</p>
-<p><strong>HTML relevance of Tree-sitter's three false rejections:</strong> they involve a hashbang terminated by
-U+2028, a carriage-return-containing comment that permits automatic semicolon insertion, and a sloppy arrow parameter named
-<code>yield</code>. Normal HTML preprocessing converts CR to LF before JavaScript parsing, so the raw-CR fixture is
-a parser-conformance edge case rather than evidence that your HTML pipeline will produce that failure.
-Hashbang placement is also sensitive to leading text/newlines. These caveats do not change the raw-JavaScript labels,
-but they limit the inference about real generated HTML.</p>
-</section><section id="explorer"><div class="section-number">05 / EXPLORE 607 CASES</div><h2>Inspect the cases behind the headline.</h2>
-<p>Filter by parser and outcome, then open a case to see its exact source, expected label and recorded diagnostic.
-These are the original 607 source units, including 500 distinct Test262 files.</p>
+<p>JavaScript forbids this <code>arguments</code> reference inside a class static block. The arrow function does not create its own <code>arguments</code> binding, so the restriction applies inside it too. An ordinary function can use its own binding. Both Acorn hosts accepted the invalid example; the modern fork rejected it. The expected result was checked against the <a href="https://tc39.es/ecma262/2025/multipage/ecmascript-language-functions-and-classes.html#sec-static-semantics-containsarguments">ES2025 ContainsArguments rule</a>. The benchmark does not patch Acorn to hide this miss.</p>
+<p>The <a href="#explorer">case explorer</a> shows every source sample and recorded result. The <a href="#evidence">downloads</a> include the complete data for independent analysis.</p>
+<p><strong>Three valid samples that Tree-sitter rejected:</strong> a hashbang line starting with <code>#!</code> and ending at Unicode line separator U+2028; a comment containing a carriage return; and an arrow parameter named <code>yield</code> in non-strict JavaScript. The comment permits automatic semicolon insertion, a JavaScript rule that can insert a statement boundary. HTML preprocessing converts carriage returns (CR) to line feeds (LF) before JavaScript parsing. The raw-CR test therefore checks the parser directly; it does not establish that extracted HTML causes the same failure. Leading text or newlines also affect hashbang placement. All three raw-JavaScript labels remain valid, but their relevance to generated HTML differs.</p>
+</section><section id="explorer"><div class="section-number">05 / SEARCH TEST SAMPLES</div><h2>Search the exact source and result for each test</h2>
+<p>Filter the recorded results by parser and outcome, then open a case to see its exact source, expected label and error message. The explorer contains all 607 test samples, including 500 distinct Test262 files. It does not run a live validator.</p>
 <div class="filters">
 <label for="parser-filter">Parser configuration<select id="parser-filter">
 <option value="acorn-v8">Acorn + mini-racer</option><option value="acorn-quickjs">Acorn + QuickJS-NG</option>
@@ -249,7 +221,7 @@ These are the original 607 source units, including 500 distinct Test262 files.</
 <option value="oxc-python">Oxc Python binding</option><option value="esprima2">esprima2</option><option value="esprima">Original Esprima</option>
 </select></label>
 <label for="outcome-filter">Recorded outcome<select id="outcome-filter"><option value="all">All samples</option>
-<option value="false-reject">False alarm — valid code rejected</option><option value="false-accept">Miss — invalid code accepted</option>
+<option value="false-reject">False alarm : valid code rejected</option><option value="false-accept">Miss : invalid code accepted</option>
 <option value="correct">Agreed with expected label</option><option value="inconclusive">Inconclusive</option></select></label>
 <label class="search-label" for="case-search">Search source or case ID<input autocomplete="off" id="case-search" placeholder="Try: duplicate-let, await, hashbang…" type="search"/></label>
 </div><p class="caption" id="explorer-status" role="status">Loading the published evidence…</p>
@@ -258,50 +230,19 @@ These are the original 607 source units, including 500 distinct Test262 files.</
 <p class="caption">The source viewer is text-only. Expected labels come from the corpus, not from the selected parser.
 Use the raw downloads below for independent analysis.</p>
 <noscript><p class="no-js">The interactive explorer needs JavaScript. <a href="data/corpus.json">Download the corpus</a>
-and <a href="data/results.json">recorded results</a>, or read the static comparison above.</p></noscript></section><section id="method"><div class="section-number">06 / HOW WE TESTED</div>
-<h2>Reproducible backtesting, not a completeness claim.</h2>
-<ul>
-<li>Seven pinned configurations run in separate fresh Linux/Python 3.13 jobs, on the same frozen source corpus.</li>
-<li>Official Test262 provenance preserves source path, commit, original-source hashes, chosen parse goal,
-strictness transformation and exclusion rules. See the full manifest rather than assuming every upstream test is eligible.</li>
-<li>Only parse-phase negatives are labeled invalid. Runtime failures and missing host functions do not make source syntax-invalid.
-Resolution negatives and out-of-contract proposals are excluded by the corpus builder.</li>
-<li>Each parser runs in a spawned worker. A five-second external deadline bounds each call; a failed worker is retired.
-Inconclusive outcomes are reported separately and do not become successful invalid detection.</li>
-<li>Script and Module are not interchangeable. The fork and Acorn explicitly use ES2025;
-other packages use their shipped grammar and are evaluated against the same labels, with that mismatch disclosed.</li>
-<li>All Esprima distributions are installed in separate environments because they share the <code>esprima</code> import name.</li>
-<li>The initial independent-context proposals were challenged by corpus, scope, specification, maintenance and final-article reviewers.
-They use the same model family; this is not cross-model proof or a popularity vote.</li>
-</ul>
-<p>The 500-file standards subset is deterministic, not random production traffic. Feature families and fixtures are correlated.
-The study does not establish a production false-positive probability, exhaust all ECMAScript syntax, or constitute a full Test262 run.
-It is also not a “backtest” of historical LLM output: no representative user production dataset was supplied.
-For deployment, add your actual model's accepted and rejected outputs as a regression set.</p>
-<p>The pinned snapshot is May 31, 2025, with a conservative feature policy—not a complete final-edition inventory.
-The subset spans 195 directories but favors richly subdivided class/generator/destructuring families; only 24 of its
-500 samples use Module. Feature tags are metadata, not proof that a syntax form occurs in the outer program
-(a RegExp-constructor test may contain no regex literal). The original modern-syntax cases complement this limitation;
-neither subset alone establishes exhaustive feature coverage. An independent reviewer checked all 500 labels,
-transformations and source/body hashes against the pinned archive.</p>
-<p>Case IDs and paths retain upstream provenance; Test262 source notices and its
-<a href="data/test262-LICENSE.txt">license</a> are preserved. No expected label was selected by asking the favored parser.</p>
-</section><section id="operations"><div class="section-number">07 / OPERATIONAL TRADEOFFS</div>
-<h2>Correctness, startup, memory and failure modes.</h2>
+and <a href="data/results.json">recorded results</a>, or read the static comparison above.</p></noscript></section><section id="method"><div class="section-number">06 / TEST METHOD AND LIMITS</div>
+<h2>Test selection, expected results and execution limits</h2>
+<ul><li>Each of the seven fixed-version setups runs in a fresh Linux/Python 3.13 job with the same test samples.</li><li>The <a href="data/test262-manifest.json">Test262 manifest</a> records original paths, the saved repository version, source hashes, parsing context and any added strict-mode directive. It also records excluded tests.</li><li>Only Test262 tests marked as parsing-time <code>SyntaxError</code> failures are labeled invalid. Expected runtime failures remain syntax-valid. Tests of module loading/resolution and unsupported proposals are excluded.</li><li>A separate worker process runs each parser. The parent process enforces a five-second limit for each input. It terminates a worker that exceeds the limit and starts another for subsequent inputs. Timeouts and failed checks are inconclusive, not successful error detection.</li><li>Acorn and the modern fork explicitly select ES2025 and Script or Module. The other packages use their shipped grammar and are compared with the same expected results.</li><li>The three Esprima distributions use the same <code>esprima</code> import name. Each is installed in a separate environment to avoid mixing package files.</li><li>Separate AI-agent reviews checked sample labels, language rules, maintenance evidence and the final article. The agents used the same model family, so their agreement is not independent-model confirmation.</li></ul>
+<p>The same selection rules produce the same 500 Test262 files. The files were not randomly sampled from production traffic, and related tests share language features. This study does not measure a production false-positive rate or run the full Test262 suite. No representative history of actual model-generated output was supplied. Before deployment, add your own accepted and rejected outputs to a regression test set.</p>
+<p>The Test262 snapshot is from May 31, 2025, and the selection uses a conservative feature list. It is not a complete inventory of the final ES2025 edition. The 500 files span 195 directories, with more examples from class, generator and destructuring tests; only 24 files use Module mode. A feature tag does not prove that syntax appears in the parsed source. For example, a test of the RegExp constructor may contain no regular-expression literal. The separate modern-syntax examples cover additional cases, but neither subset is exhaustive. An AI agent from the same model family, working in a separate context, checked all 500 labels, source transformations and hashes against the saved upstream archive.</p>
+<p>The <a href="data/test262-manifest.json">selection manifest</a> records each original Test262 path and source hash. Test262 notices and its <a href="data/test262-LICENSE.txt">license</a> are preserved. Expected results for the 500 Test262 files were derived from official metadata. No expected result was selected by asking the preferred parser.</p>
+</section><section id="operations"><div class="section-number">07 / MEMORY AND PERFORMANCE</div>
+<h2>Compare startup time, memory use and input limits</h2>
 <div class="scroll"><table><thead><tr><th>Candidate</th><th>Adapter init ms</th><th>Worker peak RSS MiB</th><th>Depth 100</th><th>Depth 300</th><th>112,779-byte valid program</th></tr></thead><tbody><tr><td>acorn-v8</td><td>318.0</td><td>102.8</td><td>valid</td><td>valid</td><td>valid; 15.6 ms</td></tr><tr><td>acorn-quickjs</td><td>23.8</td><td>32.7</td><td>valid</td><td>resource_limit</td><td>valid; 149.9 ms</td></tr><tr><td>esprima-fork</td><td>8.4</td><td>33.3</td><td>resource_limit</td><td>resource_limit</td><td>valid; 185.6 ms</td></tr><tr><td>esprima2</td><td>32.6</td><td>37.0</td><td>validator_failure</td><td>validator_failure</td><td>valid; 92.7 ms</td></tr><tr><td>tree-sitter</td><td>1.1</td><td>32.7</td><td>valid</td><td>valid</td><td>valid; 16.3 ms</td></tr><tr><td>oxc-python</td><td>0.8</td><td>32.8</td><td>valid</td><td>valid</td><td>valid; 3.3 ms</td></tr><tr><td>esprima</td><td>292.8</td><td>132.0</td><td>validator_failure</td><td>validator_failure</td><td>valid; 109.9 ms</td></tr></tbody></table></div>
-<p>Worker parse median includes parser/binding verdict conversion but excludes parent/child IPC.
-Adapter initialization includes imports and trusted-parser setup inside the worker, not interpreter process launch.
-Peak RSS is the Linux worker's process high-water mark across the run, including imports and earlier tests; it is not
-per-input allocation or a hard memory cap. Size probes are single observations, not stable throughput estimates.
-Jobs run on separate hosted runners, so timings are approximate; hardware variance matters.</p>
-<p>Three valid nesting probes (32, 100, 300) and three valid flat-program size probes (929, 10,279, 112,779 bytes)
-are separate from the 607 classification samples. Warm end-to-end repeated measurements and raw timings
-are retained in the evidence file. Concurrency scaling, long-running leaks, browser compatibility and hardened sandboxing
-were not certified. Production workers should also have OS/container memory limits.</p>
-<p>Depth limits were measured under the tested defaults. QuickJS-NG exposes stack-size configuration; its depth-300
-result is not proof that it can never handle that source. We did not tune stack budgets across hosts.
-This is a default-configuration comparison, not an optimized engine shootout.</p>
-<h3>Where each approach fits</h3>
+<p>The median parse time includes the parser call and conversion of its result through the Python binding. It excludes communication between the parent process and its worker. Initialization includes imports and loading the trusted parser, but excludes launching Python. Peak RSS measures the worker’s highest observed resident memory use across the run. It includes imports and earlier tests, so it is not memory allocated by one sample or a configured memory limit. Each size test ran once. Jobs used separate hosted runners, so hardware variation limits timing comparisons.</p>
+<p>The valid nesting tests at depths 32, 100 and 300 are separate from the 607 classification samples. So are the flat programs of 929, 10,279 and 112,779 bytes. The <a href="data/results.json">raw results</a> also retain repeated end-to-end timings measured after initialization. Concurrency scaling, long-running leaks, browser compatibility and hardened sandboxing were not certified. Set operating-system or container memory limits for production workers.</p>
+<p>The nesting tests used each host’s default stack settings. QuickJS-NG allows stack-size configuration, so its depth-300 limit does not establish an absolute maximum. Stack budgets were not tuned across hosts. These results compare the tested defaults.</p>
+<h3>Deployment role of each library</h3>
 <ul>
 <li><strong>Tree-sitter:</strong> fast, mature parsing ecosystem; helpful recovery and source ranges.
 It includes JSX and omits many early-error rules. A clean tree is not a browser-validity guarantee.</li>
@@ -313,37 +254,21 @@ syntax-checking pass. Its results do not evaluate the full Oxc toolchain.</li>
 <li><strong>Acorn:</strong> modern grammar, source-goal and early-error checking; needs a vendored trusted bundle
 plus a Python engine wheel. Embedded engine execution is only for the parser.</li>
 </ul>
-</section><section id="maintenance"><div class="section-number">08 / MAINTENANCE &amp; ADOPTION</div>
-<h2>Evaluate the package you deploy—not just its famous core.</h2>
+</section><section id="maintenance"><div class="section-number">08 / MAINTENANCE AND ADOPTION</div>
+<h2>Check maintenance of both the parser and its Python package</h2>
 <div class="scroll"><table><thead><tr><th>Component</th><th>Stars snapshot</th><th>Monthly downloads</th><th>Release/maintenance observation</th></tr></thead><tbody><tr><td>Tree-sitter core / Python binding</td><td>27,465 / 1,522</td><td>48,642,917 (binding)</td><td>Binding released Nov 9, 2026</td></tr><tr><td>JavaScript grammar</td><td>498</td><td>16,220,142</td><td>Released Sep 1, 2025; repository newer than shipped wheel</td></tr><tr><td>Acorn</td><td>11,476</td><td>1,297,676,177 (npm)</td><td>8.19.0 Oct 5, 2026; several releases during 2026</td></tr><tr><td>esprima-fork</td><td>0</td><td>129</td><td>5.0.0 Oct 13, 2026; previous release 2022</td></tr><tr><td>esprima2</td><td>73</td><td>21,741</td><td>6.0.0 Apr 22, 2026</td></tr><tr><td>Original Python Esprima</td><td>265</td><td>1,514,617</td><td>Last package release Aug 2018</td></tr><tr><td>Oxc core / Python wrapper</td><td>23,454 / 0</td><td>49 (wrapper)</td><td>Wrapper Nov 2025; core cadence does not update wrapper</td></tr><tr><td>quickjs-ng Python wrapper</td><td>10</td><td>553,556</td><td>Nov 5, 2026; recurring recent releases</td></tr><tr><td>mini-racer Python wrapper</td><td>219</td><td>2,293,645</td><td>Feb 1, 2026; roughly nine months without a package release</td></tr></tbody></table></div>
-<p>Retrieved November 15, 2026. GitHub API and registry metadata are primary sources.
-PyPI Stats is a third-party download aggregation service; npm's endpoint reports October 16–November 14.
-PyPI Stats' <code>last_month</code> responses do not provide identical window boundaries.
-These totals count automation, transitive installs and repeated downloads—not unique users, latest-version adoption,
-successful deployments or correctness. Stars are corroborating attention, not a safety or reliability certificate.</p>
-<p>QuickJS-NG's engine has 4,152 stars but its Python wrapper has 10; do not merge them.
-V8's reputation likewise does not prove the freshness of mini-racer's bundled build.
-Wheel availability is verified from filenames, but only Linux x86-64 was benchmarked here.
-The original Windows machine blocked some native imports through Application Control; Linux CI avoided that local restriction.</p>
+<p>These figures were retrieved on November 15, 2026. Repository and registry APIs supply the version and project data. PyPI Stats is a third-party download service. The npm count covers October 16 through November 14. PyPI Stats labels its count <code>last_month</code> without specifying identical window boundaries. Downloads include automation, installations pulled in by other packages and repeat installations. They do not count unique users, deployments or adoption of the latest release. Stars indicate attention; they do not establish validation accuracy or security.</p>
+<p>QuickJS-NG’s engine has 4,152 stars; its Python wrapper has 10. Treat them as separate projects. V8’s upstream reputation does not establish the freshness of mini-racer’s bundled engine. Available wheel filenames were checked, but benchmarks ran only on Linux x86-64. Windows Application Control blocked some native imports on the development laptop. The Linux CI jobs did not have that restriction.</p>
 <p>All exact endpoints, timestamps, release samples, wheel coverage, licenses and raw download responses:
 <a href="data/maintenance-evidence.md">maintenance evidence report</a>.
 No vulnerability audit, maintainer response-time study or supply-chain certification is claimed.</p>
-<h3>Decision rule</h3>
-<ol><li>Correct context and honest failure classification first.</li>
-<li>Minimize false rejections on the valid sample set.</li>
-<li>Among comparably low-false-alarm choices, prefer useful invalid detection.</li>
-<li>Then weigh deployability, operational limits and maintenance/adoption.</li></ol>
-<p>There is no arbitrary weighted “stars score.” Acorn's overall recommendation is a disclosed engineering judgment:
-strong validation plus established parser adoption, at the cost of a native engine dependency, startup overhead,
-wrapper maintenance and a known missed edge case. If pure Python is mandatory, use the fork instead;
-if only advisory structural feedback is needed, Tree-sitter remains reasonable.</p>
-</section><section id="snippet"><div class="section-number">09 / SHIP IT IN PYTHON</div>
-<h2>The recommended Python snippet.</h2>
+<h3>How test results and maintenance affect the recommendation</h3>
+<ol><li>Select the correct parsing context and distinguish syntax errors from failed checks.</li><li>Prioritize avoiding incorrect rejection of valid code.</li><li>Compare the invalid cases detected, then weigh detection differences against deployment limits and maintenance evidence.</li><li>State any accepted detection gap explicitly, as this recommendation does for Acorn’s static-block case.</li></ol>
+<p>Acorn is the overall recommendation because it combines useful error detection with established parser adoption. The costs are the native engine dependency, startup overhead, maintenance of the Python wrapper and one known missed error. Use the modern fork when an implementation entirely in Python is required. Use Tree-sitter when an advisory check for malformed structure is sufficient.</p>
+</section><section id="snippet"><div class="section-number">09 / PYTHON IMPLEMENTATION</div>
+<h2>Install mini-racer and call Acorn from Python</h2>
 <pre><code>python -m pip install mini-racer==0.14.1</code></pre>
-<p>Vendor <a href="https://unpkg.com/acorn@8.19.0/dist/acorn.js">Acorn 8.19.0's prebuilt bundle</a>
-as <code>acorn.js</code> alongside this module and retain its MIT license. The snippet verifies the exact bundle hash.
-No npm or Node installation is needed in the application container.
-The tested API uses Python ≥3.10 with a compatible native wheel.</p>
+<p>Download <a href="https://unpkg.com/acorn@8.19.0/dist/acorn.js">Acorn 8.19.0’s prebuilt JavaScript file</a> and store it as <code>acorn.js</code> beside the Python module. Retain its MIT license. The helper verifies the file’s expected SHA-256 hash before loading it. The application container needs no npm or Node installation. The tested API requires Python ≥3.10 and a compatible prebuilt mini-racer package.</p>
 <pre><code>"""Node-free strict syntax check: only trusted Acorn code executes."""
 import hashlib
 from pathlib import Path
@@ -401,31 +326,18 @@ try:
     result = validator.check(extracted_script, mode="module")  # actual HTML type
 finally:
     validator.close()</code></pre>
-<p>Reuse one context per worker rather than initializing on every request.
-The 256,000-byte input cap and two-second embedded deadline are example policies, not language rules.
-The external worker deadline used in the benchmark is additional to this compact helper; use process-level memory
-limits and deadlines for a service. Infrastructure exceptions remain inconclusive. SyntaxError locations use
-one-based lines and zero-based UTF-16 columns. Do not append those directly to Python scalar or UTF-8 byte offsets.</p>
-<p>The integration checks verify modern syntax, duplicate bindings, module/script await, size handling, deep input,
-JSX rejection and the documented edge-case miss. A sentinel check confirms submitted assignment code is parsed
-without being executed. Acorn can construct input-derived RegExp objects while building its AST; no matches or
-submitted statements are run. Parsing is still resource-consuming native work.</p>
-<h3>Keep the HTML boundary correct</h3>
-<p>Use your existing BeautifulSoup extraction deliberately: preserve raw script text, classify classic/module/data,
-and parse each source unit separately. External <code>src</code> is unchecked unless its source is supplied.
-JSON/JSON-LD requires a strict JSON parser; import maps and speculation rules need their own schema rules too.</p>
-<p>A literal <code>&lt;/script&gt;</code> can terminate HTML script content even inside a JavaScript string.
-Comment termination can leave a valid but unintentionally truncated program.
-HTML escaped/double-escaped states, <code>noscript</code>, templates, namespaces and handlers need correct context.
-Do not HTML-unescape script bodies. Event-handler attributes are different and can legally contain <code>return</code>.</p>
+<p>Keep one engine context per worker and reuse it across requests. The example’s 256,000-byte input limit and two-second engine timeout are application policies, not JavaScript rules. The benchmark also used an external worker deadline, which this compact helper does not provide. For a service, add process-level time and memory limits. Infrastructure exceptions return <code>inconclusive</code>. Error lines start at 1, and columns start at 0 and count UTF-16 code units. Convert those units before combining them with Python character indexes or UTF-8 byte offsets.</p>
+<p>The integration tests cover modern syntax, duplicate declarations, Script/Module differences for <code>await</code>, size limits, deep input, JSX rejection and the documented missed error. A test parses an assignment and confirms that the variable was not created, checking that submitted statements did not run. Acorn can construct RegExp objects from the source while building its AST, but does not run matches. Parsing still consumes CPU and memory in the native engine.</p>
+<h3>Extract the JavaScript that the browser will receive</h3>
+<p>Preserve script text when extracting it with BeautifulSoup. Classify each element as a classic script, module or data block, then parse each JavaScript block separately. A script with <code>src</code> remains unchecked unless its external source is supplied. Validate JSON and JSON-LD with a strict JSON parser. Import maps and speculation rules also need checks for their required structure.</p>
+<p>A literal <code>&lt;/script&gt;</code> can end an HTML script element even inside a JavaScript string. Inside a comment, it can leave truncated source that still parses successfully. HTML tokenizer states, <code>noscript</code>, templates, namespaces and event handlers also affect extraction. Do not decode HTML entities in script bodies. Event-handler attributes are a different context, where a statement such as <code>return false</code> can be valid.</p>
 <p>Expanded boundary checks and exact observed outcomes:
 <a href="data/html-results.json">HTML/JSON regression results</a>.
 There are 76 passing assertions and 4
 context observations, measured separately on Windows/Python 3.14.8 with BeautifulSoup 4.15.0 and html5lib 1.1.
 Their scope and limitations are recorded; no full browser rendering test is claimed.</p>
-</section><section id="evidence"><div class="section-number">10 / DOWNLOAD THE EVIDENCE</div><h2>Take the evidence with you.</h2>
-<p>The article is a recommendation; the data is an invitation to check it.
-Download the readable report, inspect every verdict, or reproduce the study from the complete technical appendix.</p>
+</section><section id="evidence"><div class="section-number">10 / REPORT AND TEST DOWNLOADS</div><h2>Download the report, test samples and raw results</h2>
+<p>Download the PDF for the recommendation and integration examples. Use the JSON files to inspect exact samples and results, or the technical appendix to reproduce the experiment.</p>
 <div class="downloads">
 <a class="download" download="" href="downloads/javascript-validation-report.pdf"><span class="format">PDF / ENGINEERING REPORT</span><strong>Download the report ↗</strong><span>Recommendation, tables, failure modes and tested Python integration.</span></a>
 <a class="download" download="" href="data/results.json"><span class="format">JSON / RAW MEASUREMENTS</span><strong>All seven result sets ↗</strong><span>4,249 recorded parser verdicts, diagnostics, versions and resource probes.</span></a>
@@ -434,17 +346,13 @@ Download the readable report, inspect every verdict, or reproduce the study from
 <a class="download" download="" href="data/test262-manifest.json"><span class="format">JSON / PROVENANCE</span><strong>Test262 selection manifest ↗</strong><span>500 upstream files, hashes, flags and deterministic selection rules.</span></a>
 <a class="download" download="" href="data/maintenance-evidence.md"><span class="format">MARKDOWN / SOURCE SNAPSHOT</span><strong>Maintenance &amp; adoption ↗</strong><span>API sources, release cadence, platform support and download methodology.</span></a>
 </div>
-<h3>Reproduce before you upgrade</h3>
-<p>Parser and engine versions change independently. Keep the known counterexample in your regression suite,
-pin the trusted parser asset, and rerun representative production examples when changing either dependency.</p>
+<h3>Rerun the tests when upgrading a dependency</h3>
+<p>Pin both the parser file and the Python engine package. Keep the known Acorn failure in your regression tests. Rerun the published samples and representative generated output whenever either dependency changes.</p>
 <ul><li><a href="https://github.com/sandeshbagmare/python-javascript-validation/actions/workflows/benchmark.yml">Parallel Linux workflow and successful runs</a></li>
 <li><a href="data/html-results.json">76 passing HTML/JSON assertions and four context observations</a></li>
 <li><a href="data/test262-LICENSE.txt">Test262 license</a> · <a href="https://github.com/acornjs/acorn/tree/8.19.0/acorn">Pinned Acorn source and license</a></li></ul>
-<div class="callout"><strong>The bottom line.</strong> Acorn hosted by Python is the strongest overall balance in this study.
-The modern Esprima fork is the pure-Python contender. Tree-sitter is the structural tool.
-None of them can tell you whether your DOM, imports or application logic will work.</div>
-<p class="caption">A finite, versioned study—not full conformance, a security audit, or a production error-rate estimate.
-No submitted JavaScript was executed in the benchmark.</p></section></main></div>
-<footer><span>Engineering notes / Python JavaScript validation<br>Evidence first. Versioned conclusions.</span>
-<span><a href="https://github.com/sandeshbagmare/python-javascript-validation">View source ↗</a> &nbsp; · &nbsp;
+<div class="callout"><strong>Before deployment:</strong> run the downloaded samples in your own environment, then add examples from your generator. Keep syntax errors separate from failed validation. Use browser tests to check DOM behavior, imports and application logic that a parser cannot evaluate.</div>
+<p class="caption">This finite, versioned study does not establish full conformance, audit security or estimate production error rates. No submitted JavaScript was executed in the benchmark.</p></section></main></div>
+<footer><span>JavaScript validation in Python<br/>Source code, measured results and implementation guidance.</span>
+<span><a href="https://github.com/sandeshbagmare/python-javascript-validation">View source ↗</a>   ·  
 <a href="#main">Back to article ↑</a></span></footer></body></html>
