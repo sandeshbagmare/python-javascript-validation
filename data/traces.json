@@ -1,0 +1,380 @@
+{
+  "missing-expression": {
+    "source": "const x=;",
+    "mode": "script",
+    "expected": false,
+    "parsers": {
+      "acorn-v8": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "diagnostic": "Unexpected token (1:8)",
+        "line": 1,
+        "column": 8,
+        "parse_microseconds": 649.923,
+        "worker_peak_rss_kib": 90824
+      },
+      "acorn-quickjs": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "diagnostic": "Unexpected token (1:8)",
+        "line": 1,
+        "column": 8,
+        "parse_microseconds": 129.163,
+        "worker_peak_rss_kib": 33452
+      },
+      "esprima-fork": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected token ;",
+        "parse_microseconds": 69.262,
+        "worker_peak_rss_kib": 33552
+      },
+      "esprima2": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected token ;",
+        "parse_microseconds": 40.814,
+        "worker_peak_rss_kib": 37204
+      },
+      "tree-sitter": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "parse_microseconds": 45.795,
+        "worker_peak_rss_kib": 33504
+      },
+      "oxc-python": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "parse_microseconds": 5.318,
+        "worker_peak_rss_kib": 33628
+      },
+      "esprima": {
+        "id": "missing-expression",
+        "mode": "script",
+        "expected": false,
+        "group": "grammar",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected token ;",
+        "parse_microseconds": 50.496,
+        "worker_peak_rss_kib": 132208
+      }
+    }
+  },
+  "duplicate-let": {
+    "source": "let x; let x;",
+    "mode": "script",
+    "expected": false,
+    "parsers": {
+      "acorn-v8": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "invalid",
+        "diagnostic": "Identifier 'x' has already been declared (1:11)",
+        "line": 1,
+        "column": 11,
+        "parse_microseconds": 443.25,
+        "worker_peak_rss_kib": 90952
+      },
+      "acorn-quickjs": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "invalid",
+        "diagnostic": "Identifier 'x' has already been declared (1:11)",
+        "line": 1,
+        "column": 11,
+        "parse_microseconds": 84.086,
+        "worker_peak_rss_kib": 33452
+      },
+      "esprima-fork": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "invalid",
+        "diagnostic": "Line 1: Identifier 'x' has already been declared",
+        "parse_microseconds": 93.358,
+        "worker_peak_rss_kib": 33552
+      },
+      "esprima2": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "valid",
+        "parse_microseconds": 33.085,
+        "worker_peak_rss_kib": 37204
+      },
+      "tree-sitter": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "valid",
+        "parse_microseconds": 32.501,
+        "worker_peak_rss_kib": 33504
+      },
+      "oxc-python": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "valid",
+        "parse_microseconds": 2.482,
+        "worker_peak_rss_kib": 33628
+      },
+      "esprima": {
+        "id": "duplicate-let",
+        "mode": "script",
+        "expected": false,
+        "group": "binding",
+        "status": "valid",
+        "parse_microseconds": 47.902,
+        "worker_peak_rss_kib": 132208
+      }
+    }
+  },
+  "optional-chain": {
+    "source": "const n = obj?.value ?? 0;",
+    "mode": "script",
+    "expected": true,
+    "parsers": {
+      "acorn-v8": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "valid",
+        "parse_microseconds": 3998.91,
+        "worker_peak_rss_kib": 84728
+      },
+      "acorn-quickjs": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "valid",
+        "parse_microseconds": 206.77,
+        "worker_peak_rss_kib": 33452
+      },
+      "esprima-fork": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "valid",
+        "parse_microseconds": 1131.997,
+        "worker_peak_rss_kib": 33552
+      },
+      "esprima2": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "valid",
+        "parse_microseconds": 155.875,
+        "worker_peak_rss_kib": 37204
+      },
+      "tree-sitter": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "valid",
+        "parse_microseconds": 56.806,
+        "worker_peak_rss_kib": 33504
+      },
+      "oxc-python": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "valid",
+        "parse_microseconds": 38.11,
+        "worker_peak_rss_kib": 33628
+      },
+      "esprima": {
+        "id": "optional-chain",
+        "mode": "script",
+        "expected": true,
+        "group": "modern",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected token .",
+        "parse_microseconds": 219.42,
+        "worker_peak_rss_kib": 131824
+      }
+    }
+  },
+  "script-await": {
+    "source": "await 1;",
+    "mode": "script",
+    "expected": false,
+    "parsers": {
+      "acorn-v8": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "invalid",
+        "diagnostic": "Unexpected token (1:6)",
+        "line": 1,
+        "column": 6,
+        "parse_microseconds": 441.623,
+        "worker_peak_rss_kib": 90952
+      },
+      "acorn-quickjs": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "invalid",
+        "diagnostic": "Unexpected token (1:6)",
+        "line": 1,
+        "column": 6,
+        "parse_microseconds": 70.246,
+        "worker_peak_rss_kib": 33452
+      },
+      "esprima-fork": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected number",
+        "parse_microseconds": 57.955,
+        "worker_peak_rss_kib": 33552
+      },
+      "esprima2": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected number",
+        "parse_microseconds": 27.693,
+        "worker_peak_rss_kib": 37204
+      },
+      "tree-sitter": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "valid",
+        "parse_microseconds": 7.684,
+        "worker_peak_rss_kib": 33504
+      },
+      "oxc-python": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "invalid",
+        "parse_microseconds": 3.414,
+        "worker_peak_rss_kib": 33628
+      },
+      "esprima": {
+        "id": "script-await",
+        "mode": "script",
+        "expected": false,
+        "group": "context",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected number",
+        "parse_microseconds": 43.536,
+        "worker_peak_rss_kib": 132208
+      }
+    }
+  },
+  "scope-static-block-arrow-arguments": {
+    "source": "class C { static { const f = () => arguments; } }",
+    "mode": "script",
+    "expected": false,
+    "parsers": {
+      "acorn-v8": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "valid",
+        "parse_microseconds": 831.982,
+        "worker_peak_rss_kib": 91208
+      },
+      "acorn-quickjs": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "valid",
+        "parse_microseconds": 125.318,
+        "worker_peak_rss_kib": 33452
+      },
+      "esprima-fork": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "invalid",
+        "diagnostic": "Line 1: arguments is forbidden in class field initializers and static blocks",
+        "parse_microseconds": 244.129,
+        "worker_peak_rss_kib": 33552
+      },
+      "esprima2": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "valid",
+        "parse_microseconds": 75.695,
+        "worker_peak_rss_kib": 37204
+      },
+      "tree-sitter": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "valid",
+        "parse_microseconds": 17.172,
+        "worker_peak_rss_kib": 33504
+      },
+      "oxc-python": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "valid",
+        "parse_microseconds": 3.414,
+        "worker_peak_rss_kib": 33628
+      },
+      "esprima": {
+        "id": "scope-static-block-arrow-arguments",
+        "mode": "script",
+        "expected": false,
+        "group": "classes",
+        "status": "invalid",
+        "diagnostic": "Line 1: Unexpected token {",
+        "parse_microseconds": 44.817,
+        "worker_peak_rss_kib": 132208
+      }
+    }
+  }
+}

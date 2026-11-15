@@ -6,6 +6,11 @@ Separate checks cover depth, input size, startup, worker memory and HTML boundar
 
 **Read the article:** https://sandeshbagmare.github.io/python-javascript-validation/
 
+The developer blog includes light/dark themes, recorded animated walkthroughs,
+a searchable 607-case explorer, exact parser diagnostics, copyable Python code,
+and a [downloadable PDF report](https://sandeshbagmare.github.io/python-javascript-validation/downloads/javascript-validation-report.pdf).
+The full static research record remains in `evidence.html`.
+
 The expanded study favors **Acorn hosted through Python** for the overall balance
 of low false alarms, useful invalid detection and established parser adoption.
 The modern Esprima fork leads this corpus's strict accuracy but has limited
