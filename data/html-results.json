@@ -1,0 +1,1422 @@
+{
+  "study": "Expanded HTML extraction boundary checks",
+  "command": "research/env-main/Scripts/python research/html_expanded_checks.py",
+  "environment": {
+    "python": "3.14.8",
+    "beautifulsoup4": "4.15.0",
+    "html5lib": "1.1"
+  },
+  "references": {
+    "tokenization": "https://html.spec.whatwg.org/multipage/parsing.html#script-data-state",
+    "script_types": "https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element",
+    "noscript": "https://html.spec.whatwg.org/multipage/scripting.html#the-noscript-element",
+    "template": "https://html.spec.whatwg.org/multipage/scripting.html#the-template-element",
+    "json": "https://www.rfc-editor.org/rfc/rfc8259"
+  },
+  "summary": {
+    "total_cases": 80,
+    "asserted_cases": 76,
+    "passed": 76,
+    "failed": 0,
+    "observations": 4,
+    "by_category": {
+      "extraction": 34,
+      "attribute-boundary": 24,
+      "strict-json": 14,
+      "event-attribute": 4,
+      "context-observation": 4
+    }
+  },
+  "scope_caveats": [
+    "No JavaScript execution, network fetching, browser automation, rendering, or browser conformance certification.",
+    "These HTML boundary cases complement, and are not counted as, ECMAScript parser benchmark cases.",
+    "Classification labels are WHATWG reference facts; only attribute/source extraction is asserted, not a duplicated classifier or browser preparation.",
+    "src presence (including empty) prevents treating body text as inline fallback for classic/module scripts.",
+    "BeautifulSoup html5lib defaults to scripting=False; explicit html5lib scripting=True only changes parsing, never executes scripts.",
+    "Template and noscript tree results are observations, not assertions of browser DOM equivalence.",
+    "Event handler attributes are decoded once and need handler-specific compilation context; they are not standalone script units.",
+    "JSON checks reject nonstandard constants and malformed syntax; they do not validate import-map/speculation-rule schemas or enforce unique object keys.",
+    "Input is Unicode text, not a byte-stream encoding detection test; no claim about every malformed HTML, SVG/XML, CSP, or dynamic DOM case."
+  ],
+  "results": [
+    {
+      "name": "raw-named-entity",
+      "category": "extraction",
+      "html": "<script>let s=\"&amp;\";</script>",
+      "expected": [
+        "let s=\"&amp;\";"
+      ],
+      "actual": [
+        "let s=\"&amp;\";"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "raw-numeric-entity",
+      "category": "extraction",
+      "html": "<script>let s=\"&#60;&#x3c;\";</script>",
+      "expected": [
+        "let s=\"&#60;&#x3c;\";"
+      ],
+      "actual": [
+        "let s=\"&#60;&#x3c;\";"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "raw-encoded-close",
+      "category": "extraction",
+      "html": "<script>\"&lt;/script&gt;\"</script>",
+      "expected": [
+        "\"&lt;/script&gt;\""
+      ],
+      "actual": [
+        "\"&lt;/script&gt;\""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "literal-close-string",
+      "category": "extraction",
+      "html": "<script>let s=\"</script>\";</script>",
+      "expected": [
+        "let s=\""
+      ],
+      "actual": [
+        "let s=\""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "literal-close-comment",
+      "category": "extraction",
+      "html": "<script>// </script>\nrun()</script>",
+      "expected": [
+        "// "
+      ],
+      "actual": [
+        "// "
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "literal-close-template",
+      "category": "extraction",
+      "html": "<script>let s=`</script>`;</script>",
+      "expected": [
+        "let s=`"
+      ],
+      "actual": [
+        "let s=`"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "mixed-case-tags",
+      "category": "extraction",
+      "html": "<ScRiPt>A</sCrIpT>",
+      "expected": [
+        "A"
+      ],
+      "actual": [
+        "A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "close-space",
+      "category": "extraction",
+      "html": "<script>A</script >tail",
+      "expected": [
+        "A"
+      ],
+      "actual": [
+        "A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "close-tab",
+      "category": "extraction",
+      "html": "<script>A</script\t>tail",
+      "expected": [
+        "A"
+      ],
+      "actual": [
+        "A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "close-slash",
+      "category": "extraction",
+      "html": "<script>A</script/>tail",
+      "expected": [
+        "A"
+      ],
+      "actual": [
+        "A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "false-close-suffix",
+      "category": "extraction",
+      "html": "<script>A</scriptx>B</script>",
+      "expected": [
+        "A</scriptx>B"
+      ],
+      "actual": [
+        "A</scriptx>B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "false-close-space-before-name",
+      "category": "extraction",
+      "html": "<script>A</ script>B</script>",
+      "expected": [
+        "A</ script>B"
+      ],
+      "actual": [
+        "A</ script>B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "unicode-escape-close",
+      "category": "extraction",
+      "html": "<script>\"\\u003C/script>\"</script>",
+      "expected": [
+        "\"\\u003C/script>\""
+      ],
+      "actual": [
+        "\"\\u003C/script>\""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "hex-escape-close",
+      "category": "extraction",
+      "html": "<script>\"\\x3c/script>\"</script>",
+      "expected": [
+        "\"\\x3c/script>\""
+      ],
+      "actual": [
+        "\"\\x3c/script>\""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "slash-escape-close",
+      "category": "extraction",
+      "html": "<script>\"<\\/script>\"</script>",
+      "expected": [
+        "\"<\\/script>\""
+      ],
+      "actual": [
+        "\"<\\/script>\""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "escaped-state-close",
+      "category": "extraction",
+      "html": "<script><!--A</script><p>B",
+      "expected": [
+        "<!--A"
+      ],
+      "actual": [
+        "<!--A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "escaped-state-exit",
+      "category": "extraction",
+      "html": "<script><!--A-->B</script>",
+      "expected": [
+        "<!--A-->B"
+      ],
+      "actual": [
+        "<!--A-->B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "double-escaped-close",
+      "category": "extraction",
+      "html": "<script><!--<script>A</script>B</script>",
+      "expected": [
+        "<!--<script>A</script>B"
+      ],
+      "actual": [
+        "<!--<script>A</script>B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "double-escaped-case",
+      "category": "extraction",
+      "html": "<script><!--<ScRiPt>A</sCrIpT>B</script>",
+      "expected": [
+        "<!--<ScRiPt>A</sCrIpT>B"
+      ],
+      "actual": [
+        "<!--<ScRiPt>A</sCrIpT>B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "double-escaped-eof",
+      "category": "extraction",
+      "html": "<script><!--<script>A</script><p>B",
+      "expected": [
+        "<!--<script>A</script><p>B"
+      ],
+      "actual": [
+        "<!--<script>A</script><p>B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "double-escaped-dash-exit",
+      "category": "extraction",
+      "html": "<script><!--<script>A-->B</script>",
+      "expected": [
+        "<!--<script>A-->B"
+      ],
+      "actual": [
+        "<!--<script>A-->B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "not-double-escaped",
+      "category": "extraction",
+      "html": "<script><!--<scriptx>A</script>",
+      "expected": [
+        "<!--<scriptx>A"
+      ],
+      "actual": [
+        "<!--<scriptx>A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "normal-script-open-text",
+      "category": "extraction",
+      "html": "<script><script>A</script>",
+      "expected": [
+        "<script>A"
+      ],
+      "actual": [
+        "<script>A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "separate-strict-scopes",
+      "category": "extraction",
+      "html": "<script>\"use strict\";</script><script>with({}){}</script>",
+      "expected": [
+        "\"use strict\";",
+        "with({}){}"
+      ],
+      "actual": [
+        "\"use strict\";",
+        "with({}){}"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "separate-incomplete-units",
+      "category": "extraction",
+      "html": "<script>let x =</script><script>1;</script>",
+      "expected": [
+        "let x =",
+        "1;"
+      ],
+      "actual": [
+        "let x =",
+        "1;"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "empty-script",
+      "category": "extraction",
+      "html": "<script></script>",
+      "expected": [
+        ""
+      ],
+      "actual": [
+        ""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "eof-script",
+      "category": "extraction",
+      "html": "<script>let x=1;",
+      "expected": [
+        "let x=1;"
+      ],
+      "actual": [
+        "let x=1;"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "self-closing-not-void",
+      "category": "extraction",
+      "html": "<script/>A</script>",
+      "expected": [
+        "A"
+      ],
+      "actual": [
+        "A"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "newline-normalization",
+      "category": "extraction",
+      "html": "<script>A\r\nB\rC\nD</script>",
+      "expected": [
+        "A\nB\nC\nD"
+      ],
+      "actual": [
+        "A\nB\nC\nD"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "null-replacement",
+      "category": "extraction",
+      "html": "<script>A\u0000B</script>",
+      "expected": [
+        "A�B"
+      ],
+      "actual": [
+        "A�B"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "unicode-source",
+      "category": "extraction",
+      "html": "<script>const café=\"雪😀\"; let π=1;</script>",
+      "expected": [
+        "const café=\"雪😀\"; let π=1;"
+      ],
+      "actual": [
+        "const café=\"雪😀\"; let π=1;"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "json-literal-close",
+      "category": "extraction",
+      "html": "<script type=\"application/json\">{\"s\":\"</script>\"}</script>",
+      "expected": [
+        "{\"s\":\""
+      ],
+      "actual": [
+        "{\"s\":\""
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "textarea-not-script",
+      "category": "extraction",
+      "html": "<textarea><script>A</script></textarea>",
+      "expected": [],
+      "actual": [],
+      "status": "passed"
+    },
+    {
+      "name": "comment-not-script",
+      "category": "extraction",
+      "html": "<!-- <script>A</script> -->",
+      "expected": [],
+      "actual": [],
+      "status": "passed"
+    },
+    {
+      "name": "type-absent",
+      "category": "attribute-boundary",
+      "html": "<script >SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {}
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {}
+      },
+      "status": "passed",
+      "normative_classification": "classic",
+      "classification_tested": false
+    },
+    {
+      "name": "type-empty",
+      "category": "attribute-boundary",
+      "html": "<script type=\"\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": ""
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": ""
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic",
+      "classification_tested": false
+    },
+    {
+      "name": "module",
+      "category": "attribute-boundary",
+      "html": "<script type=\"module\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "module",
+      "classification_tested": false
+    },
+    {
+      "name": "module-case",
+      "category": "attribute-boundary",
+      "html": "<script TYPE=\"MoDuLe\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "MoDuLe"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "MoDuLe"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "module",
+      "classification_tested": false
+    },
+    {
+      "name": "module-entity",
+      "category": "attribute-boundary",
+      "html": "<script type=\"mod&#117;le\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "module",
+      "classification_tested": false
+    },
+    {
+      "name": "module-space",
+      "category": "attribute-boundary",
+      "html": "<script type=\" module \">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " module "
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " module "
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "module-tab",
+      "category": "attribute-boundary",
+      "html": "<script type=\"module&#9;\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module\t"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module\t"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "module-parameter",
+      "category": "attribute-boundary",
+      "html": "<script type=\"module; charset=utf-8\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module; charset=utf-8"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module; charset=utf-8"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "module-non-ascii-space",
+      "category": "attribute-boundary",
+      "html": "<script type=\" module\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " module"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " module"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "classic-mime-case",
+      "category": "attribute-boundary",
+      "html": "<script type=\"TEXT/JAVASCRIPT\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "TEXT/JAVASCRIPT"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "TEXT/JAVASCRIPT"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic",
+      "classification_tested": false
+    },
+    {
+      "name": "classic-mime-space",
+      "category": "attribute-boundary",
+      "html": "<script type=\" text/javascript \">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " text/javascript "
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " text/javascript "
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic",
+      "classification_tested": false
+    },
+    {
+      "name": "mime-parameters",
+      "category": "attribute-boundary",
+      "html": "<script type=\"text/javascript; charset=utf-8\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "text/javascript; charset=utf-8"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "text/javascript; charset=utf-8"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "type-whitespace",
+      "category": "attribute-boundary",
+      "html": "<script type=\" \">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " "
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": " "
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "json-data",
+      "category": "attribute-boundary",
+      "html": "<script type=\"application/json\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "application/json"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "application/json"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "data block",
+      "classification_tested": false
+    },
+    {
+      "name": "importmap-case",
+      "category": "attribute-boundary",
+      "html": "<script type=\"IMPORTMAP\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "IMPORTMAP"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "IMPORTMAP"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "importmap",
+      "classification_tested": false
+    },
+    {
+      "name": "speculationrules",
+      "category": "attribute-boundary",
+      "html": "<script type=\"speculationrules\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "speculationrules"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "speculationrules"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "speculationrules",
+      "classification_tested": false
+    },
+    {
+      "name": "legacy-language",
+      "category": "attribute-boundary",
+      "html": "<script language=\"javascript\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "language": "javascript"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "language": "javascript"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic",
+      "classification_tested": false
+    },
+    {
+      "name": "type-overrides-language",
+      "category": "attribute-boundary",
+      "html": "<script type=\"module\" language=\"vbscript\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module",
+          "language": "vbscript"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module",
+          "language": "vbscript"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "module",
+      "classification_tested": false
+    },
+    {
+      "name": "src-empty",
+      "category": "attribute-boundary",
+      "html": "<script src=\"\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": ""
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": ""
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic; empty src errors, not inline fallback",
+      "classification_tested": false
+    },
+    {
+      "name": "src-bare",
+      "category": "attribute-boundary",
+      "html": "<script src>SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": ""
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": ""
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic; empty src errors, not inline fallback",
+      "classification_tested": false
+    },
+    {
+      "name": "src-nonempty",
+      "category": "attribute-boundary",
+      "html": "<script src=\"app.js\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": "app.js"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": "app.js"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic; external source, not inline fallback",
+      "classification_tested": false
+    },
+    {
+      "name": "src-entity",
+      "category": "attribute-boundary",
+      "html": "<script SRC=\"a.js?x=1&amp;y=2\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": "a.js?x=1&y=2"
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "src": "a.js?x=1&y=2"
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic; external source",
+      "classification_tested": false
+    },
+    {
+      "name": "module-src-empty",
+      "category": "attribute-boundary",
+      "html": "<script type=\"module\" src=\"\">SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module",
+          "src": ""
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "type": "module",
+          "src": ""
+        }
+      },
+      "status": "passed",
+      "normative_classification": "module; empty src errors",
+      "classification_tested": false
+    },
+    {
+      "name": "nomodule",
+      "category": "attribute-boundary",
+      "html": "<script nomodule>SOURCE</script>",
+      "expected": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "nomodule": ""
+        }
+      },
+      "actual": {
+        "sources": [
+          "SOURCE"
+        ],
+        "attributes": {
+          "nomodule": ""
+        }
+      },
+      "status": "passed",
+      "normative_classification": "classic; skipped by module-supporting user agents",
+      "classification_tested": false
+    },
+    {
+      "name": "json-object",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":1}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":1}"
+        ],
+        "valid": true,
+        "value": {
+          "x": 1
+        }
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":1}"
+        ],
+        "valid": true,
+        "value": {
+          "x": 1
+        }
+      },
+      "status": "passed",
+      "diagnostic": null
+    },
+    {
+      "name": "json-scalar",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">null</script>",
+      "expected": {
+        "sources": [
+          "null"
+        ],
+        "valid": true,
+        "value": null
+      },
+      "actual": {
+        "sources": [
+          "null"
+        ],
+        "valid": true,
+        "value": null
+      },
+      "status": "passed",
+      "diagnostic": null
+    },
+    {
+      "name": "json-raw-entity-value",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"s\":\"&amp;\"}</script>",
+      "expected": {
+        "sources": [
+          "{\"s\":\"&amp;\"}"
+        ],
+        "valid": true,
+        "value": {
+          "s": "&amp;"
+        }
+      },
+      "actual": {
+        "sources": [
+          "{\"s\":\"&amp;\"}"
+        ],
+        "valid": true,
+        "value": {
+          "s": "&amp;"
+        }
+      },
+      "status": "passed",
+      "diagnostic": null
+    },
+    {
+      "name": "json-unicode-value",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"s\":\"雪😀\"}</script>",
+      "expected": {
+        "sources": [
+          "{\"s\":\"雪😀\"}"
+        ],
+        "valid": true,
+        "value": {
+          "s": "雪😀"
+        }
+      },
+      "actual": {
+        "sources": [
+          "{\"s\":\"雪😀\"}"
+        ],
+        "valid": true,
+        "value": {
+          "s": "雪😀"
+        }
+      },
+      "status": "passed",
+      "diagnostic": null
+    },
+    {
+      "name": "json-escaped-close-value",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"s\":\"\\u003c/script>\"}</script>",
+      "expected": {
+        "sources": [
+          "{\"s\":\"\\u003c/script>\"}"
+        ],
+        "valid": true,
+        "value": {
+          "s": "</script>"
+        }
+      },
+      "actual": {
+        "sources": [
+          "{\"s\":\"\\u003c/script>\"}"
+        ],
+        "valid": true,
+        "value": {
+          "s": "</script>"
+        }
+      },
+      "status": "passed",
+      "diagnostic": null
+    },
+    {
+      "name": "json-nan",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":NaN}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":NaN}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":NaN}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Non-JSON constant: NaN"
+    },
+    {
+      "name": "json-infinity",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":Infinity}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":Infinity}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":Infinity}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Non-JSON constant: Infinity"
+    },
+    {
+      "name": "json-negative-infinity",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":-Infinity}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":-Infinity}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":-Infinity}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Non-JSON constant: -Infinity"
+    },
+    {
+      "name": "json-trailing-object-comma",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":1,}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":1,}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":1,}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Illegal trailing comma before end of object: line 1 column 7 (char 6)"
+    },
+    {
+      "name": "json-trailing-array-comma",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">[1,]</script>",
+      "expected": {
+        "sources": [
+          "[1,]"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "[1,]"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Illegal trailing comma before end of array: line 1 column 3 (char 2)"
+    },
+    {
+      "name": "json-single-quotes",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{'x':1}</script>",
+      "expected": {
+        "sources": [
+          "{'x':1}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{'x':1}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+    },
+    {
+      "name": "json-comment",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":/*comment*/1}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":/*comment*/1}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":/*comment*/1}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Expecting value: line 1 column 6 (char 5)"
+    },
+    {
+      "name": "json-unescaped-control",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{\"x\":\"a\nb\"}</script>",
+      "expected": {
+        "sources": [
+          "{\"x\":\"a\nb\"}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{\"x\":\"a\nb\"}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Invalid control character at: line 1 column 8 (char 7)"
+    },
+    {
+      "name": "json-multiple-values",
+      "category": "strict-json",
+      "html": "<script type=\"application/json\">{}{}</script>",
+      "expected": {
+        "sources": [
+          "{}{}"
+        ],
+        "valid": false
+      },
+      "actual": {
+        "sources": [
+          "{}{}"
+        ],
+        "valid": false
+      },
+      "status": "passed",
+      "diagnostic": "Extra data: line 1 column 3 (char 2)"
+    },
+    {
+      "name": "handler-ampersand",
+      "category": "event-attribute",
+      "html": "<button onclick=\"return x &amp;&amp; y\">",
+      "expected": "return x && y",
+      "actual": "return x && y",
+      "status": "passed"
+    },
+    {
+      "name": "handler-quotes",
+      "category": "event-attribute",
+      "html": "<button onclick=\"return &quot;雪&quot;\">",
+      "expected": "return \"雪\"",
+      "actual": "return \"雪\"",
+      "status": "passed"
+    },
+    {
+      "name": "handler-numeric",
+      "category": "event-attribute",
+      "html": "<button ONCLICK=\"return x &#60; 2\">",
+      "expected": "return x < 2",
+      "actual": "return x < 2",
+      "status": "passed"
+    },
+    {
+      "name": "handler-decode-once",
+      "category": "event-attribute",
+      "html": "<button onclick=\"return &amp;lt;\">",
+      "expected": "return &lt;",
+      "actual": "return &lt;",
+      "status": "passed"
+    },
+    {
+      "name": "template",
+      "category": "context-observation",
+      "html": "<template><script>A</script></template><script>B</script>",
+      "status": "observed",
+      "beautifulsoup_sources": [
+        "A",
+        "B"
+      ],
+      "html5lib_sources_by_scripting_flag": {
+        "false": [
+          "A",
+          "B"
+        ],
+        "true": [
+          "A",
+          "B"
+        ]
+      },
+      "caveat": "Browser template contents are a separate inert DocumentFragment; soup.find_all is not a browser document query."
+    },
+    {
+      "name": "template-table",
+      "category": "context-observation",
+      "html": "<template><table><script>A</script></table></template>",
+      "status": "observed",
+      "beautifulsoup_sources": [
+        "A"
+      ],
+      "html5lib_sources_by_scripting_flag": {
+        "false": [
+          "A"
+        ],
+        "true": [
+          "A"
+        ]
+      },
+      "caveat": "html5lib 1.1 template tree building is not a browser-equivalence oracle."
+    },
+    {
+      "name": "noscript-body",
+      "category": "context-observation",
+      "html": "<body><noscript><script>A</script></noscript><script>B</script>",
+      "status": "observed",
+      "beautifulsoup_sources": [
+        "A",
+        "B"
+      ],
+      "html5lib_sources_by_scripting_flag": {
+        "false": [
+          "A",
+          "B"
+        ],
+        "true": [
+          "B"
+        ]
+      },
+      "caveat": "BeautifulSoup uses html5lib default scripting=False; scripting-enabled body noscript is raw text."
+    },
+    {
+      "name": "noscript-head",
+      "category": "context-observation",
+      "html": "<head><noscript><script>A</script></noscript></head>",
+      "status": "observed",
+      "beautifulsoup_sources": [
+        "A"
+      ],
+      "html5lib_sources_by_scripting_flag": {
+        "false": [
+          "A"
+        ],
+        "true": []
+      },
+      "caveat": "Head noscript also depends on scripting flag and insertion mode; record both parser modes without browser claims."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+index.html text eol=lf
+README.md text eol=lf
+.github/workflows/*.yml text eol=lf
+data/* -text
